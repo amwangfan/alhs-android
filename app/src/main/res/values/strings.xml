@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">艾利浩斯学院图书馆</string>
+    <string name="site_home">https://alhs.xyz/</string>
+    <string name="site_live">https://alhs.live/</string>
+    <string name="site_subtitle">主站:alhs.xyz  发布页:alhs.live</string>
+</resources>

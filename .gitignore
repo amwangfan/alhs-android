@@ -1,0 +1,32 @@
+*.iml
+.gradle/
+.kotlin/
+local.properties
+.idea/
+.DS_Store
+/build/
+app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+bin/
+gen/
+out/
+.release/
+
+# Built APKs / bundles (do not publish binaries)
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Third-party reference APK — not our source
+ref/
+
+# Secrets / local SDK
+*.keystore
+*.jks
+.dev.vars
+google-services.json
+**/secrets.*
