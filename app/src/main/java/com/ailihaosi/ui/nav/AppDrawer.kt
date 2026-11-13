@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,12 +34,17 @@ import com.ailihaosi.ui.browser.openInCustomTab
 @Composable
 fun AppDrawerContent(
     onHome: () -> Unit,
-    onRandom: () -> Unit,
-    onHistory: () -> Unit,
+    onSearch: () -> Unit,
+    onRankings: () -> Unit,
+    onActivities: () -> Unit,
+    onOriginals: () -> Unit,
     onFeatured: () -> Unit,
-    onFavorites: () -> Unit,
-    onNotices: () -> Unit,
+    onHistory: () -> Unit,
+    onSections: () -> Unit,
     onInteractive: () -> Unit,
+    onNotices: () -> Unit,
+    onRandom: () -> Unit,
+    onFavorites: () -> Unit,
     onCheckUpdate: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -71,7 +77,7 @@ fun AppDrawerContent(
                 modifier = Modifier.padding(horizontal = 28.dp, vertical = 12.dp)
             )
             Text(
-                text = "预览 API · alpha-preview.alhs.xyz",
+                text = "主站 alhs.xyz",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 28.dp)
@@ -81,30 +87,34 @@ fun AppDrawerContent(
             Spacer(Modifier.height(8.dp))
 
             DrawerItem("首页", Icons.Default.Home, onHome)
-            DrawerItem("随机文章", Icons.Default.Refresh, onRandom)
-            DrawerItem("校史馆", Icons.Default.Info, onHistory)
+            DrawerItem("搜索", Icons.Default.Search, onSearch)
+            DrawerItem("排行", Icons.Default.Star, onRankings)
+            DrawerItem("活动与公告", Icons.Default.Info, onActivities)
+            DrawerItem("原创小说", Icons.Default.Star, onOriginals)
             DrawerItem("图书馆精选", Icons.Default.Star, onFeatured)
-            DrawerItem("收藏 / 离线缓存", Icons.Default.Favorite, onFavorites)
-            DrawerItem("公告", Icons.Default.Info, onNotices)
+            DrawerItem("校史馆", Icons.Default.Info, onHistory)
+            DrawerItem("栏目", Icons.Default.Place, onSections)
             DrawerItem("互动小说", Icons.Default.Star, onInteractive)
+            DrawerItem("公告", Icons.Default.Info, onNotices)
+            DrawerItem("随机文章", Icons.Default.Refresh, onRandom)
+            DrawerItem("收藏 / 离线缓存", Icons.Default.Favorite, onFavorites)
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
-            DrawerItem("地址&公告发布页", Icons.Default.Place) {
+            DrawerItem("打开主站", Icons.Default.Place) {
+                openInCustomTab(context, SiteUrls.HOME)
+            }
+            DrawerItem("地址与发布页", Icons.Default.Place) {
                 openInCustomTab(context, SiteUrls.LIVE)
             }
-            DrawerItem("打开预览站", Icons.Default.Place) {
-                openInCustomTab(context, SiteUrls.PREVIEW)
-            }
             DrawerItem("登录", Icons.Default.Person) {
-                // Turnstile captcha requires browser; Custom Tabs (native CookieJar not shared).
                 openInCustomTab(context, SiteUrls.LOGIN)
             }
             DrawerItem("注册", Icons.Default.Person) {
                 openInCustomTab(context, SiteUrls.REGISTER)
             }
-            DrawerItem("账号 / 后台", Icons.Default.Info) {
-                openInCustomTab(context, SiteUrls.ACCOUNT)
+            DrawerItem("个人中心", Icons.Default.Info) {
+                openInCustomTab(context, SiteUrls.DASHBOARD)
             }
             DrawerItem("检查更新 (当前 ${BuildConfig.VERSION_NAME})", Icons.Default.Refresh, onCheckUpdate)
         }

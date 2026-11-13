@@ -3,7 +3,6 @@ package com.ailihaosi.data.model
 import com.ailihaosi.data.SiteUrls
 import com.google.gson.annotations.SerializedName
 
-/** Envelope used by /api/v1 success/fail helpers. */
 data class ApiEnvelope<T>(
     val ok: Boolean = false,
     val data: T? = null,
@@ -27,19 +26,21 @@ data class ApiError(
 )
 
 data class AuthorRef(
-    val id: Int = 0,
+    val id: Long = 0L,
     @SerializedName("display_name") val displayName: String = ""
 )
 
 data class TermRef(
-    val id: Int = 0,
+    val id: Long = 0L,
     val name: String = "",
-    val slug: String = ""
+    val slug: String = "",
+    @SerializedName("post_count") val postCount: Int = 0,
+    val key: String? = null,
+    val source: String? = null
 )
 
-/** Public post metadata from GET /api/v1/posts[/:id]. */
 data class PostDto(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
     val slug: String = "",
     val excerpt: String = "",
@@ -58,45 +59,32 @@ data class PostDto(
 )
 
 data class BodyDto(
-    @SerializedName("post_id") val postId: Int = 0,
-    @SerializedName("body_html") val bodyHtml: String = "",
-    @SerializedName("body_source") val bodySource: String = ""
-)
-
-/** Static R2 article JSON at static-preview.alhs.xyz/v1/articles/{id}.json */
-data class StaticArticleDto(
-    val id: Int = 0,
-    val title: String = "",
-    val excerpt: String = "",
-    @SerializedName("author_id") val authorId: Int? = null,
-    val author: String? = null,
-    @SerializedName("date_gmt") val dateGmt: String = "",
-    @SerializedName("date_local") val dateLocal: String = "",
-    @SerializedName("modified_gmt") val modifiedGmt: String = "",
-    val type: String = "post",
-    val available: Boolean = true,
+    @SerializedName("post_id") val postId: Long = 0L,
     @SerializedName("body_html") val bodyHtml: String = "",
     @SerializedName("body_source") val bodySource: String = ""
 )
 
 data class RecentItemDto(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
     val excerpt: String = "",
-    @SerializedName("author_id") val authorId: Int? = null,
+    @SerializedName("author_id") val authorId: Long? = null,
     val author: String? = null,
     @SerializedName("published_at") val publishedAt: String = "",
     @SerializedName("updated_at") val updatedAt: String = "",
     val type: String = "post",
-    @SerializedName("update_kind") val updateKind: String = ""
+    @SerializedName("update_kind") val updateKind: String = "",
+    val tags: List<TermRef> = emptyList()
 )
 
 data class RankingItemDto(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
-    @SerializedName("author_id") val authorId: Int? = null,
+    val name: String = "",
+    @SerializedName("author_id") val authorId: Long? = null,
     val author: String? = null,
     @SerializedName("date_gmt") val dateGmt: String = "",
+    @SerializedName("published_count") val publishedCount: Int = 0,
     val views: Int = 0,
     val likes: Int = 0
 )
@@ -108,24 +96,32 @@ data class RankingDto(
 )
 
 data class AnnouncementDto(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
     val content: String = "",
-    val pinned: Int = 0
+    val pinned: Int = 0,
+    @SerializedName("created_at") val createdAt: String = ""
 )
 
 data class BootstrapDto(
     val recent: List<RecentItemDto> = emptyList(),
+    @SerializedName("latest_posts") val latestPosts: List<RecentItemDto> = emptyList(),
     @SerializedName("post_ranking") val postRanking: RankingDto? = null,
     @SerializedName("author_ranking") val authorRanking: RankingDto? = null,
     val activities: List<AnnouncementDto> = emptyList(),
     val announcements: List<AnnouncementDto> = emptyList(),
-    val settings: Map<String, Any?> = emptyMap(),
-    @SerializedName("static_ready") val staticReady: Boolean? = null
+    val settings: Map<String, Any?> = emptyMap()
+)
+
+data class PublicUserDto(
+    val id: Long = 0L,
+    @SerializedName("display_name") val displayName: String = "",
+    val bio: String? = null,
+    val publications: Int = 0
 )
 
 data class AuthUserDto(
-    val id: Int = 0,
+    val id: Long = 0L,
     val login: String = "",
     @SerializedName("display_name") val displayName: String? = null,
     val email: String? = null,
@@ -139,26 +135,48 @@ data class AuthSessionDto(
     @SerializedName("logged_out") val loggedOut: Boolean? = null
 )
 
-/**
- * Domain post used by Compose UI. Built from PostDto / StaticArticle / cache.
- * Replaces former WordPress WpPost shape.
- */
+data class SeriesChapter(
+    val id: Long = 0L,
+    val title: String = ""
+)
+
+data class SeriesNav(
+    val id: Long = 0L,
+    val name: String = "",
+    val chapters: List<SeriesChapter> = emptyList()
+) {
+    fun indexOf(postId: Long): Int = chapters.indexOfFirst { it.id == postId }
+    fun previous(postId: Long): SeriesChapter? {
+        val i = indexOf(postId)
+        return if (i > 0) chapters[i - 1] else null
+    }
+    fun next(postId: Long): SeriesChapter? {
+        val i = indexOf(postId)
+        return if (i >= 0 && i < chapters.lastIndex) chapters[i + 1] else null
+    }
+}
+
 data class AlhsPost(
-    val id: Int = 0,
+    val id: Long = 0L,
     val title: String = "",
     val excerpt: String = "",
     val contentHtml: String = "",
     val date: String = "",
+    val modified: String = "",
     val link: String = "",
-    val authorId: Int = 0,
+    val authorId: Long = 0L,
     val authorName: String = "",
-    val categoryIds: List<Int> = emptyList(),
+    val categoryIds: List<Long> = emptyList(),
+    val categoryNames: List<String> = emptyList(),
+    val tags: List<TermRef> = emptyList(),
+    val series: List<TermRef> = emptyList(),
     val type: String = "post",
     val sticky: Boolean = false,
-    val viewCount: Int = 0
+    val viewCount: Int = 0,
+    val likeCount: Int = 0
 ) {
     val isInteractive: Boolean
-        get() = categoryIds.contains(SiteUrls.INTERACTIVE_CATEGORY_ID) ||
+        get() = categoryNames.any { it == SiteUrls.SECTION_INTERACTIVE || it.contains("互动") } ||
             title.contains("互动") ||
             contentHtml.contains("ink.js", ignoreCase = true) ||
             contentHtml.contains("story.js", ignoreCase = true)
@@ -172,24 +190,17 @@ fun PostDto.toDomain(contentHtml: String = ""): AlhsPost = AlhsPost(
     excerpt = excerpt,
     contentHtml = contentHtml,
     date = dateGmt.ifBlank { modifiedGmt },
+    modified = modifiedGmt,
     link = SiteUrls.postUrl(id),
-    authorId = author?.id ?: 0,
-    authorName = author?.displayName?.takeIf { it.isNotBlank() } ?: "作者 #${author?.id ?: 0}",
+    authorId = author?.id ?: 0L,
+    authorName = author?.displayName?.takeIf { it.isNotBlank() } ?: "作者 #${author?.id ?: 0L}",
     categoryIds = categories.map { it.id },
+    categoryNames = categories.map { it.name },
+    tags = tags,
+    series = series,
     type = type,
-    viewCount = viewCount
-)
-
-fun StaticArticleDto.toDomain(): AlhsPost = AlhsPost(
-    id = id,
-    title = title,
-    excerpt = excerpt,
-    contentHtml = bodyHtml,
-    date = dateLocal.ifBlank { dateGmt },
-    link = SiteUrls.postUrl(id),
-    authorId = authorId ?: 0,
-    authorName = author?.takeIf { it.isNotBlank() } ?: "作者 #${authorId ?: 0}",
-    type = type
+    viewCount = viewCount,
+    likeCount = likeCount
 )
 
 fun RecentItemDto.toDomain(): AlhsPost = AlhsPost(
@@ -197,19 +208,28 @@ fun RecentItemDto.toDomain(): AlhsPost = AlhsPost(
     title = title,
     excerpt = excerpt,
     date = publishedAt.ifBlank { updatedAt },
+    modified = updatedAt,
     link = SiteUrls.postUrl(id),
-    authorId = authorId ?: 0,
-    authorName = author?.takeIf { it.isNotBlank() } ?: "作者 #${authorId ?: 0}",
+    authorId = authorId ?: 0L,
+    authorName = author?.takeIf { it.isNotBlank() } ?: "作者 #${authorId ?: 0L}",
+    tags = tags,
     type = type
 )
 
-fun RankingItemDto.toDomain(): AlhsPost = AlhsPost(
+fun RankingItemDto.toPost(): AlhsPost = AlhsPost(
     id = id,
     title = title,
     date = dateGmt,
     link = SiteUrls.postUrl(id),
-    authorId = authorId ?: 0,
-    authorName = author?.takeIf { it.isNotBlank() } ?: "作者 #${authorId ?: 0}",
+    authorId = authorId ?: 0L,
+    authorName = author?.takeIf { it.isNotBlank() } ?: "作者 #${authorId ?: 0L}",
     sticky = true,
-    viewCount = views
+    viewCount = views,
+    likeCount = likes
+)
+
+fun RankingItemDto.toAuthor(): PublicUserDto = PublicUserDto(
+    id = id,
+    displayName = name.ifBlank { author.orEmpty() },
+    publications = publishedCount
 )

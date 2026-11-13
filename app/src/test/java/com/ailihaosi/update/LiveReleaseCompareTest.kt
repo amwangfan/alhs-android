@@ -8,7 +8,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 
-/** Hits the real GitHub API. Opt-in: ALHS_LIVE_UPDATE_TEST=1 ./gradlew :app:testReleaseUnitTest */
 class LiveReleaseCompareTest {
     @Test fun liveLatest() {
         assumeTrue(System.getenv("ALHS_LIVE_UPDATE_TEST") == "1")

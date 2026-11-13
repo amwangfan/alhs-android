@@ -1,8 +1,10 @@
 package com.ailihaosi.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,9 +14,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,8 +45,9 @@ import com.ailihaosi.ui.components.StickyBanner
 @Composable
 fun HomeScreen(
     onOpenPost: (AlhsPost) -> Unit,
-    onOpenAuthor: (authorId: Int, authorName: String) -> Unit,
+    onOpenAuthor: (authorId: Long, authorName: String) -> Unit,
     onOpenDrawer: () -> Unit,
+    onOpenSearch: () -> Unit,
     vm: HomeViewModel = viewModel(
         factory = HomeViewModel.factory(
             LocalContext.current.applicationContext as android.app.Application
@@ -59,7 +64,7 @@ fun HomeScreen(
             last >= info.totalItemsCount - 3
         }
     }
-    LaunchedEffect(shouldLoadMore, state.endReached, state.loadingMore) {
+    LaunchedEffect(shouldLoadMore, state.endReached, state.loadingMore, state.orderby) {
         if (shouldLoadMore && !state.endReached && !state.loadingMore && !state.loading) {
             vm.loadMore()
         }
@@ -71,7 +76,7 @@ fun HomeScreen(
                 title = { Column {
                     Text("艾利浩斯学院图书馆", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "预览站:alpha-preview  发布页:alhs.live",
+                        "主站:alhs.xyz  发布页:alhs.live",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -82,6 +87,9 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onOpenSearch) {
+                        Icon(Icons.Default.Search, contentDescription = "搜索")
+                    }
                     IconButton(onClick = { vm.refresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "刷新")
                     }
@@ -118,6 +126,23 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize().padding(padding),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
+                    item {
+                        Row(
+                            Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = state.orderby == "date",
+                                onClick = { vm.setOrderby("date") },
+                                label = { Text("最新") }
+                            )
+                            FilterChip(
+                                selected = state.orderby == "modified",
+                                onClick = { vm.setOrderby("modified") },
+                                label = { Text("最近修改") }
+                            )
+                        }
+                    }
                     if (state.sticky.isNotEmpty()) {
                         item {
                             StickyBanner(

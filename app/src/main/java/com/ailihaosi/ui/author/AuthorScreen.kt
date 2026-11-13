@@ -38,7 +38,7 @@ import com.ailihaosi.ui.components.PostListItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthorScreen(
-    authorId: Int,
+    authorId: Long,
     authorName: String,
     onBack: () -> Unit,
     onOpenPost: (AlhsPost) -> Unit,
@@ -104,6 +104,16 @@ fun AuthorScreen(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
+                if (state.bio.isNotBlank()) {
+                    item {
+                        Text(
+                            state.bio,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
                 items(state.posts, key = { it.id }) { post ->
                     PostListItem(post = post, onClick = { onOpenPost(post) })
                 }

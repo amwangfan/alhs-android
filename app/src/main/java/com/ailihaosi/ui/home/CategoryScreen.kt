@@ -40,11 +40,11 @@ import com.ailihaosi.ui.components.PostListItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    categoryId: Int,
+    categoryId: Long,
     title: String,
     onBack: () -> Unit,
     onOpenPost: (AlhsPost) -> Unit
- ) {
+) {
     val context = LocalContext.current
     val repo = remember { PostRepository(appContext = context.applicationContext) }
     var posts by remember { mutableStateOf<List<AlhsPost>>(emptyList()) }
@@ -78,7 +78,7 @@ fun CategoryScreen(
             last >= listState.layoutInfo.totalItemsCount - 3
         }
     }
-    LaunchedEffect(shouldLoadMore, page, totalPages, loadingMore, loading) {
+    LaunchedEffect(shouldLoadMore, page, totalPages, loadingMore, loading, categoryId) {
         if (shouldLoadMore && !loading && !loadingMore && page < totalPages) {
             loadingMore = true
             val next = page + 1

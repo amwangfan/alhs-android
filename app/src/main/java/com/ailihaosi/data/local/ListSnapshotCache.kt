@@ -6,10 +6,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 
-/**
- * Long-TTL disk snapshots for list/bootstrap payloads (stale-while-revalidate).
- * No polling; callers decide when to revalidate.
- */
 class ListSnapshotCache(context: Context) {
     private val app = context.applicationContext
     private val gson = Gson()
@@ -48,7 +44,6 @@ class ListSnapshotCache(context: Context) {
     private fun safe(key: String) = key.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".json"
 
     companion object {
-        /** 6 hours — list snapshots are cheap to keep; revalidate on pull-to-refresh. */
         const val DEFAULT_TTL_MS = 6L * 60L * 60L * 1000L
         const val BOOTSTRAP_TTL_MS = 30L * 60L * 1000L
 

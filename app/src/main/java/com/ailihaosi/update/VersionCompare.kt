@@ -1,14 +1,5 @@
 package com.ailihaosi.update
 
-/**
- * Small semver-ish comparator for release tags such as "v0.3.1", "0.3", "0.3.0-beta".
- *
- * - Leading "v"/"V" and whitespace are stripped.
- * - Build metadata after '+' is ignored.
- * - Core is split on '.', each part parsed as its leading digits (missing/garbage = 0).
- * - If cores are equal, a pre-release ("-beta", "-rc1") sorts BEFORE the plain release;
- *   two pre-releases are compared lexicographically (case-insensitive).
- */
 object VersionCompare {
 
     data class Parsed(val core: List<Int>, val preRelease: String?)
@@ -27,8 +18,7 @@ object VersionCompare {
         return Parsed(core, pre)
     }
 
-    /** Negative if a < b, 0 if equal, positive if a > b. */
-    fun compare(a: String, b: String): Int {
+        fun compare(a: String, b: String): Int {
         val pa = parse(a)
         val pb = parse(b)
         val n = maxOf(pa.core.size, pb.core.size)
@@ -39,13 +29,12 @@ object VersionCompare {
         }
         return when {
             pa.preRelease == null && pb.preRelease == null -> 0
-            pa.preRelease == null -> 1 // release > pre-release
+            pa.preRelease == null -> 1
             pb.preRelease == null -> -1
             else -> pa.preRelease.lowercase().compareTo(pb.preRelease.lowercase())
                 .coerceIn(-1, 1)
         }
     }
 
-    /** True only when [remote] is strictly newer than [current]. */
-    fun isNewer(remote: String, current: String): Boolean = compare(remote, current) > 0
+        fun isNewer(remote: String, current: String): Boolean = compare(remote, current) > 0
 }

@@ -39,16 +39,12 @@ class VersionCompareTest {
     }
 
     @Test fun preRelease() {
-        // pre-release sorts below the plain release of same core
         assertTrue(newer("0.3.0", "0.3.0-beta"))
         assertFalse(newer("0.3.0-beta", "0.3.0"))
-        // but above the previous release
         assertTrue(newer("0.3.0-beta", "0.2.9"))
-        // core still dominates
         assertTrue(newer("0.3.1-beta", "0.3.0"))
         assertEquals(0, VersionCompare.compare("0.3.0-beta", "v0.3.0-beta"))
         assertTrue(newer("0.3.0-rc1", "0.3.0-beta"))
-        // build metadata ignored
         assertEquals(0, VersionCompare.compare("0.3.1+5", "0.3.1"))
     }
 

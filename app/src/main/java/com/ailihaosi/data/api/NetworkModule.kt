@@ -15,8 +15,7 @@ import java.util.concurrent.TimeUnit
 
 object NetworkModule {
     const val API_BASE = SiteUrls.API_V1
-    const val STATIC_BASE = SiteUrls.STATIC
-    const val USER_AGENT = "AlhsReader/0.3 (Android; com.ailihaosi)"
+    const val USER_AGENT = "AlhsReader/0.4.0 (Android; com.ailihaosi)"
 
     @Volatile private var appContext: Context? = null
 
@@ -67,15 +66,6 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AlhsApi::class.java)
-    }
-
-    val staticApi: StaticApi by lazy {
-        Retrofit.Builder()
-            .baseUrl(STATIC_BASE)
-            .client(okHttp)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(StaticApi::class.java)
     }
 
     fun clearCookies() {

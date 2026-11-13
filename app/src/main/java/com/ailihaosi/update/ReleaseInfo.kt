@@ -9,18 +9,15 @@ data class ReleaseInfo(
     val name: String,
     val notesSummary: String,
     val htmlUrl: String,
-    /** browser_download_url of alhs-slim.apk (or first .apk), null if none. */
-    val apkUrl: String?
+        val apkUrl: String?
 ) {
-    /** Where 「下载更新」 sends the user. */
-    val downloadUrl: String get() = apkUrl ?: htmlUrl
+        val downloadUrl: String get() = apkUrl ?: htmlUrl
 
     companion object {
         const val APK_ASSET_NAME = "alhs-slim.apk"
         const val FALLBACK_HTML = "https://github.com/amwangfan/alhs-android/releases/latest"
 
-        /** Parses a GitHub `releases/latest` JSON body. Tree parsing → R8-safe, no reflection. */
-        fun parse(json: String): ReleaseInfo? {
+                fun parse(json: String): ReleaseInfo? {
             val root = runCatching { JsonParser.parseString(json) }.getOrNull()
                 ?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
             val tag = root.str("tag_name")?.trim().orEmpty()
@@ -51,20 +48,19 @@ data class ReleaseInfo(
         private fun JsonObject.bool(key: String): Boolean? =
             get(key)?.takeIf { it.isJsonPrimitive }?.let { runCatching { it.asBoolean }.getOrNull() }
 
-        /** Light markdown cleanup, first ~12 non-empty lines, max ~300 chars. */
-        fun summarizeNotes(body: String, maxChars: Int = 300, maxLines: Int = 12): String {
+                fun summarizeNotes(body: String, maxChars: Int = 300, maxLines: Int = 12): String {
             val lines = body.replace("\r\n", "\n").lines()
                 .asSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() && !it.startsWith("```") && !it.matches(Regex("^[-*_=]{3,}$")) }
                 .map { line ->
                     line
-                        .replace(Regex("^#{1,6}\\s*"), "")              // headings
-                        .replace(Regex("^[-*+]\\s+"), "• ")              // bullets
-                        .replace(Regex("!\\[[^\\]]*]\\([^)]*\\)"), "")   // images
-                        .replace(Regex("\\[([^\\]]+)]\\([^)]*\\)"), "$1") // links → text
-                        .replace(Regex("(\\*\\*|__|`)"), "")             // bold / code ticks
-                        .replace(Regex("^>\\s*"), "")                    // quotes
+                        .replace(Regex("^#{1,6}\\s*"), "")
+                        .replace(Regex("^[-*+]\\s+"), "• ")
+                        .replace(Regex("!\\[[^\\]]*]\\([^)]*\\)"), "")
+                        .replace(Regex("\\[([^\\]]+)]\\([^)]*\\)"), "$1")
+                        .replace(Regex("(\\*\\*|__|`)"), "")
+                        .replace(Regex("^>\\s*"), "")
                         .trim()
                 }
                 .filter { it.isNotEmpty() }

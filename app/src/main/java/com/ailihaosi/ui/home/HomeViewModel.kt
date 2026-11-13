@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val posts: List<AlhsPost> = emptyList(),
     val sticky: List<AlhsPost> = emptyList(),
+    val orderby: String = "date",
     val page: Int = 0,
     val totalPages: Int = 1,
     val loading: Boolean = false,
@@ -34,8 +35,7 @@ class HomeViewModel(
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     init {
-        // Instant paint from disk snapshot when available, then revalidate.
-        repo.cachedHomePosts()?.let { cached ->
+        repo.cachedHomePosts(orderby = "date")?.let { cached ->
             _state.update {
                 it.copy(
                     posts = cached.posts,
@@ -49,15 +49,30 @@ class HomeViewModel(
         refresh()
     }
 
+    fun setOrderby(orderby: String) {
+        if (orderby == _state.value.orderby) return
+        _state.update {
+            it.copy(
+                orderby = orderby,
+                posts = emptyList(),
+                page = 0,
+                endReached = false,
+                error = null
+            )
+        }
+        refresh()
+    }
+
     fun refresh() {
         viewModelScope.launch {
+            val orderby = _state.value.orderby
             _state.update { it.copy(loading = it.posts.isEmpty(), error = null, page = 0, endReached = false) }
             val stickyJob = launch {
                 repo.fetchRankedPosts(limit = 5).onSuccess { list ->
                     _state.update { it.copy(sticky = list) }
                 }
             }
-            val result = repo.fetchPosts(page = 1, perPage = 20, preferCache = false)
+            val result = repo.fetchPosts(page = 1, perPage = 20, orderby = orderby, preferCache = false)
             stickyJob.join()
             result
                 .onSuccess { page ->
@@ -90,7 +105,7 @@ class HomeViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loadingMore = true, error = null) }
             val next = s.page + 1
-            repo.fetchPosts(page = next, perPage = 20, preferCache = false)
+            repo.fetchPosts(page = next, perPage = 20, orderby = s.orderby, preferCache = false)
                 .onSuccess { page ->
                     _state.update {
                         it.copy(

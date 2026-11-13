@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.ailihaosi.data.SiteUrls
 import com.ailihaosi.data.model.AlhsPost
 import com.ailihaosi.data.repo.PostRepository
 import com.ailihaosi.ui.browser.openInCustomTab
@@ -51,7 +52,10 @@ fun InteractiveScreen(
     LaunchedEffect(reloadToken) {
         loading = true
         error = null
-        repo.fetchInteractive()
+        repo.resolveCategory(SiteUrls.SECTION_INTERACTIVE)
+            .mapCatching { term ->
+                repo.fetchPosts(page = 1, category = term.id).getOrThrow()
+            }
             .onSuccess {
                 posts = it.posts
                 loading = false
@@ -102,7 +106,7 @@ fun InteractiveScreen(
             ) {
                 item {
                     Text(
-                        text = "分类「互动小说」；条目默认用浏览器打开（含 JS 互动）。点标题旁也可进详情预览正文。",
+                        text = "互动作品建议在浏览器中打开。点击作者名可进入应用内阅读。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp)
@@ -112,9 +116,7 @@ fun InteractiveScreen(
                     PostListItem(
                         post = post,
                         onClick = {
-                            val url = post.link.ifBlank {
-                                com.ailihaosi.data.SiteUrls.postUrl(post.id)
-                            }
+                            val url = post.link.ifBlank { SiteUrls.postUrl(post.id) }
                             openInCustomTab(context, url)
                         },
                         onAuthorClick = { onOpenPost(post) }

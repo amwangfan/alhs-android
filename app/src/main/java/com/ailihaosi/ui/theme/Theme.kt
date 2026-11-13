@@ -19,7 +19,6 @@ private val DarkColors = darkColorScheme(
     error = Color(0xFFCF6679)
 )
 
-/** Always-on dark reading theme. */
 @Composable
 fun AlhsTheme(content: @Composable () -> Unit) {
     MaterialTheme(

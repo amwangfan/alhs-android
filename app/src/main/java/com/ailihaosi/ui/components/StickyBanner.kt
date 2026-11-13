@@ -27,7 +27,7 @@ fun StickyBanner(
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Text(
-            text = "精选 · ${stripHtml(first.title)}",
+            text = "热门 · ${stripHtml(first.title)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.secondary,
             maxLines = 2,

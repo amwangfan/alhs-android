@@ -13,11 +13,9 @@ fun stripHtml(html: String?): String {
 }
 
 fun formatWpDate(raw: String): String {
-    // "2026-10-12T14:23:09" -> "2026-10-12"
     return raw.take(10).ifBlank { raw }
 }
 
-/** Dark-theme CSS wrapper for article HTML shown in WebView. */
 fun wrapArticleHtml(bodyHtml: String, title: String): String {
     val safeTitle = title
         .replace("<", "&lt;")

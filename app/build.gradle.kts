@@ -12,11 +12,10 @@ android {
         applicationId = "com.ailihaosi"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.3.1"
+        versionCode = 6
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Smallest practical ABI set for modern phones
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
@@ -24,7 +23,6 @@ android {
 
     buildTypes {
         debug {
-            // Also minify debug so we can ship a small testable APK
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -35,7 +33,6 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            // Use debug keystore so assembleRelease works without a release keystore
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -63,7 +60,6 @@ android {
             excludes += "DebugProbesKt.bin"
         }
         jniLibs {
-            // Keep only arm64 (ndk.abiFilters already filters packaging)
             excludes += setOf("**/armeabi-v7a/**", "**/x86/**", "**/x86_64/**")
         }
     }
@@ -83,14 +79,11 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    // NOT material-icons-extended (multi-MB DEX). Core icons only.
     implementation("androidx.compose.material:material-icons-core")
 
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    // Gson instead of moshi-kotlin (avoids kotlin-reflect)
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    // Logging only in debug sources via optional dep — omit from release runtime
 
     implementation("androidx.browser:browser:1.8.0")
     implementation("org.jsoup:jsoup:1.18.1")

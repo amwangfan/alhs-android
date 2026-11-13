@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 
 data class AuthorUiState(
     val authorName: String = "",
+    val bio: String = "",
     val posts: List<AlhsPost> = emptyList(),
     val page: Int = 0,
     val totalPages: Int = 1,
@@ -26,7 +27,7 @@ data class AuthorUiState(
 
 class AuthorViewModel(
     app: Application,
-    private val authorId: Int,
+    private val authorId: Long,
     initialName: String,
     private val repo: PostRepository = PostRepository(appContext = app)
 ) : AndroidViewModel(app) {
@@ -41,6 +42,16 @@ class AuthorViewModel(
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null, page = 0, endReached = false) }
+            launch {
+                repo.fetchUser(authorId).onSuccess { user ->
+                    _state.update {
+                        it.copy(
+                            authorName = user.displayName.ifBlank { it.authorName },
+                            bio = user.bio.orEmpty()
+                        )
+                    }
+                }
+            }
             repo.fetchAuthorPosts(authorId, page = 1)
                 .onSuccess { page ->
                     val name = page.posts.firstOrNull()?.authorName?.takeIf { it.isNotBlank() }
@@ -90,7 +101,7 @@ class AuthorViewModel(
     }
 
     companion object {
-        fun factory(app: Application, authorId: Int, name: String) =
+        fun factory(app: Application, authorId: Long, name: String) =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =

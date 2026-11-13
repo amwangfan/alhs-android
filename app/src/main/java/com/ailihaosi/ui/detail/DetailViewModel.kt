@@ -9,6 +9,7 @@ import com.ailihaosi.data.SiteUrls
 import com.ailihaosi.data.local.ArticleCacheStore
 import com.ailihaosi.data.local.CachedArticle
 import com.ailihaosi.data.model.AlhsPost
+import com.ailihaosi.data.model.SeriesNav
 import com.ailihaosi.data.repo.PostRepository
 import com.ailihaosi.ui.components.stripHtml
 import kotlinx.coroutines.Dispatchers
@@ -26,12 +27,13 @@ data class DetailUiState(
     val fromCache: Boolean = false,
     val isCached: Boolean = false,
     val isFavorite: Boolean = false,
-    val isPage: Boolean = false
+    val isPage: Boolean = false,
+    val series: SeriesNav? = null
 )
 
 class DetailViewModel(
     app: Application,
-    private val contentId: Int,
+    private val contentId: Long,
     private val isPage: Boolean,
     private val repo: PostRepository = PostRepository(appContext = app)
 ) : AndroidViewModel(app) {
@@ -55,7 +57,6 @@ class DetailViewModel(
                     isCached = cache.isCached(contentId)
                 )
             }
-            // Always try local first for instant paint / offline.
             val local = withContext(Dispatchers.IO) { cache.get(contentId) }
             if (local != null && !preferNetwork) {
                 _state.update {
@@ -70,7 +71,6 @@ class DetailViewModel(
                 return@launch
             }
             if (local != null && preferNetwork) {
-                // Show stale while revalidating.
                 _state.update {
                     it.copy(
                         post = local.toAlhsPost(),
@@ -98,6 +98,7 @@ class DetailViewModel(
                             error = null
                         )
                     }
+                    loadSeries(typed)
                 }
                 .onFailure { e ->
                     if (local != null) {
@@ -117,6 +118,15 @@ class DetailViewModel(
                         }
                     }
                 }
+        }
+    }
+
+    private fun loadSeries(post: AlhsPost) {
+        val term = post.series.firstOrNull() ?: return
+        viewModelScope.launch {
+            repo.fetchSeriesNav(term).onSuccess { nav ->
+                _state.update { it.copy(series = nav) }
+            }
         }
     }
 
@@ -143,7 +153,7 @@ class DetailViewModel(
     }
 
     companion object {
-        fun factory(app: Application, id: Int, isPage: Boolean) =
+        fun factory(app: Application, id: Long, isPage: Boolean) =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =

@@ -11,11 +11,16 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -37,12 +42,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ailihaosi.data.SiteUrls
+import com.ailihaosi.data.model.SeriesChapter
 import com.ailihaosi.ui.browser.openInCustomTab
 import com.ailihaosi.ui.components.formatWpDate
 import com.ailihaosi.ui.components.stripHtml
@@ -51,10 +61,11 @@ import com.ailihaosi.ui.components.wrapArticleHtml
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
-    contentId: Int,
+    contentId: Long,
     isPage: Boolean = false,
     onBack: () -> Unit,
-    onOpenAuthor: (authorId: Int, authorName: String) -> Unit,
+    onOpenAuthor: (authorId: Long, authorName: String) -> Unit,
+    onOpenPost: (id: Long) -> Unit = {},
     vm: DetailViewModel = viewModel(
         factory = DetailViewModel.factory(
             LocalContext.current.applicationContext as android.app.Application,
@@ -66,6 +77,7 @@ fun DetailScreen(
     val state by vm.state.collectAsState()
     val context = LocalContext.current
     val post = state.post
+    var showChapters by remember { mutableStateOf(false) }
 
     fun share() {
         val p = post ?: return
@@ -96,7 +108,7 @@ fun DetailScreen(
                         )
                         Text(
                             text = buildString {
-                                append("预览站:alpha-preview")
+                                append("alhs.xyz")
                                 if (state.fromCache) append(" · 离线")
                             },
                             style = MaterialTheme.typography.labelSmall,
@@ -136,7 +148,7 @@ fun DetailScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         when {
-            state.loading -> Box(
+            state.loading && post == null -> Box(
                 Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
@@ -172,9 +184,62 @@ fun DetailScreen(
                                 if (!isPage) onOpenAuthor(post.authorId, post.authorName)
                             }
                     )
+                    val series = state.series
+                    if (series != null && series.chapters.isNotEmpty()) {
+                        val prev = series.previous(post.id)
+                        val next = series.next(post.id)
+                        val index = series.indexOf(post.id)
+                        Text(
+                            text = series.name + if (index >= 0) " · 第 ${index + 1} / ${series.chapters.size} 篇" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Row(
+                            Modifier.padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            if (prev != null) {
+                                TextButton(onClick = { onOpenPost(prev.id) }) {
+                                    Text("上一章", maxLines = 1)
+                                }
+                            }
+                            if (next != null) {
+                                TextButton(onClick = { onOpenPost(next.id) }) {
+                                    Text("下一章", maxLines = 1)
+                                }
+                            }
+                            TextButton(onClick = { showChapters = !showChapters }) {
+                                Text(if (showChapters) "收起目录" else "查看目录")
+                            }
+                        }
+                        if (showChapters) {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 240.dp)
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                            ) {
+                                series.chapters.forEachIndexed { i, chapter: SeriesChapter ->
+                                    val current = chapter.id == post.id
+                                    Text(
+                                        text = "${i + 1}. ${stripHtml(chapter.title)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (current) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable(enabled = !current) { onOpenPost(chapter.id) }
+                                            .padding(vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                     if (post.isInteractive && !isPage) {
                         Text(
-                            text = "检测到互动小说，建议用浏览器打开以获得完整体验。",
+                            text = "这篇是互动小说，建议用浏览器打开以获得完整体验。",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -195,7 +260,7 @@ fun DetailScreen(
                             post.contentHtml,
                             stripHtml(post.title)
                         ),
-                        baseUrl = post.link.ifBlank { "https://alpha-preview.alhs.xyz/" },
+                        baseUrl = post.link.ifBlank { SiteUrls.HOME },
                         onLinkClick = { url -> openInCustomTab(context, url) },
                         modifier = Modifier.fillMaxSize()
                     )

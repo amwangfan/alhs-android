@@ -2,20 +2,15 @@ package com.ailihaosi.data.local
 
 import android.content.Context
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.File
 
-/**
- * Per-article offline cache under filesDir/article_cache/{id}.json.
- * Favorites are tracked in SharedPreferences and reuse the same cached bodies.
- */
 class ArticleCacheStore(context: Context) {
     private val appContext = context.applicationContext
     private val gson = Gson()
     private val dir = File(appContext.filesDir, "article_cache").also { it.mkdirs() }
     private val prefs = appContext.getSharedPreferences("alhs_prefs", Context.MODE_PRIVATE)
 
-    private fun fileFor(id: Int) = File(dir, "$id.json")
+    private fun fileFor(id: Long) = File(dir, "$id.json")
 
     fun save(article: CachedArticle, markFavorite: Boolean? = null): CachedArticle {
         val fav = markFavorite ?: isFavorite(article.id)
@@ -25,13 +20,13 @@ class ArticleCacheStore(context: Context) {
         return toSave
     }
 
-    fun get(id: Int): CachedArticle? {
+    fun get(id: Long): CachedArticle? {
         val f = fileFor(id)
         if (!f.exists()) return null
         return runCatching { gson.fromJson(f.readText(), CachedArticle::class.java) }.getOrNull()
     }
 
-    fun isCached(id: Int): Boolean = fileFor(id).exists()
+    fun isCached(id: Long): Boolean = fileFor(id).exists()
 
     fun listCached(): List<CachedArticle> =
         dir.listFiles()?.mapNotNull { f ->
@@ -43,9 +38,9 @@ class ArticleCacheStore(context: Context) {
         return ids.mapNotNull { get(it) }.sortedByDescending { it.cachedAtEpochMs }
     }
 
-    fun isFavorite(id: Int): Boolean = favoriteIds().contains(id)
+    fun isFavorite(id: Long): Boolean = favoriteIds().contains(id)
 
-    fun setFavorite(id: Int, favorite: Boolean, seed: CachedArticle? = null) {
+    fun setFavorite(id: Long, favorite: Boolean, seed: CachedArticle? = null) {
         val ids = favoriteIds().toMutableSet()
         if (favorite) {
             ids.add(id)
@@ -63,22 +58,20 @@ class ArticleCacheStore(context: Context) {
         prefs.edit().putStringSet(KEY_FAVS, ids.map { it.toString() }.toSet()).apply()
     }
 
-    private fun addFavoriteId(id: Int) {
+    private fun addFavoriteId(id: Long) {
         val ids = favoriteIds().toMutableSet()
         ids.add(id)
         prefs.edit().putStringSet(KEY_FAVS, ids.map { it.toString() }.toSet()).apply()
     }
 
-    fun favoriteIds(): Set<Int> =
-        prefs.getStringSet(KEY_FAVS, emptySet())?.mapNotNull { it.toIntOrNull() }?.toSet().orEmpty()
+    fun favoriteIds(): Set<Long> =
+        prefs.getStringSet(KEY_FAVS, emptySet())?.mapNotNull { it.toLongOrNull() }?.toSet().orEmpty()
 
-    /** Delete one cached article. Favorite flag is also cleared. */
-    fun remove(id: Int) {
+    fun remove(id: Long) {
         fileFor(id).delete()
         setFavorite(id, false)
     }
 
-    /** Wipe all cached article bodies. Optionally clear favorites. */
     fun clearAll(clearFavorites: Boolean = true) {
         dir.listFiles()?.forEach { it.delete() }
         if (clearFavorites) {

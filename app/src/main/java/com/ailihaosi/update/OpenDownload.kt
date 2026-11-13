@@ -7,11 +7,6 @@ import android.net.Uri
 import android.widget.Toast
 import com.ailihaosi.ui.browser.openInCustomTab
 
-/**
- * Hands the APK URL to the system browser (its own download manager + installer prompt).
- * No REQUEST_INSTALL_PACKAGES / FileProvider needed. Falls back to Custom Tabs, then the
- * release page.
- */
 fun openDownload(context: Context, release: ReleaseInfo) {
     val url = release.downloadUrl
     try {
